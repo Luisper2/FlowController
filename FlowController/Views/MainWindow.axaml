@@ -7,18 +7,155 @@
         x:Class="FlowController.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="FlowController">
-	<Grid Margin="20">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
-		<TextBlock Text="Devices"
-                   FontSize="18"
-                   FontWeight="Bold"
-                   Margin="0,0,0,10"/>
+        Title="FlowController"
+		Width="572"
+		Height="272">
+	<Grid ColumnDefinitions="160,*"
+		ColumnSpacing="16"
+		Margin="20">
+		<Grid Grid.Column="0"
+			RowSpacing="4">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+			<TextBlock Text="Devices"
+				Grid.Row="0"
+				FontSize="18"
+				Margin="8,0"/>
+			<ListBox x:Name="Devices"
+				 Grid.Row="1"
+				 Background="Transparent"
+				 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+				<ListBox.ItemTemplate>
+					<DataTemplate>
+						<TextBlock Text="{Binding}"/>
+					</DataTemplate>
+				</ListBox.ItemTemplate>
 
-		<ListBox x:Name="Devices"
-                 Grid.Row="1"/>
+			</ListBox>
+		</Grid>
+		<Grid Grid.Column="1"
+			RowDefinitions="50, 50, 50, Auto"
+			RowSpacing="16"
+			ColumnDefinitions="150, 150, Auto"
+			ColumnSpacing="48">
+			<Grid Grid.Row="0"
+				Grid.Column="0"
+				VerticalAlignment="Center">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+				<TextBlock
+					Text="Flow"
+					Grid.Row="0"
+					FontSize="18"
+					VerticalAlignment="Top"
+					HorizontalAlignment="Left"/>
+				<TextBlock
+					x:Name="Flow"
+					Text="-"
+					Grid.Row="1"
+					FontSize="24"
+					VerticalAlignment="Bottom"
+					HorizontalAlignment="Right"/>
+			</Grid>
+			<Grid Grid.Row="0"
+				Grid.Column="1"
+				VerticalAlignment="Center">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+				<TextBlock
+					x:Name="Units"
+					Text="-"
+					Grid.Row="0"
+					FontSize="16"
+					Margin="0,4,0,0"
+					VerticalAlignment="Top"
+					HorizontalAlignment="Right"/>
+				<TextBlock
+					x:Name="Range"
+					Text="-"
+					Grid.Row="1"
+					FontSize="20"
+					VerticalAlignment="Bottom"
+					HorizontalAlignment="Right"/>
+			</Grid>
+			<Grid Grid.Row="1"
+				Grid.Column="0"
+				RowDefinitions="Auto,*"
+				VerticalAlignment="Center">
+				<TextBlock
+					Text="Setpoint"
+					Grid.Row="0"
+					FontSize="16"
+					VerticalAlignment="Top"
+					HorizontalAlignment="Left"/>
+				<TextBlock
+					x:Name="Setpoint"
+					Text="-"
+					Grid.Row="1"
+					FontSize="16"
+					VerticalAlignment="Bottom"
+					HorizontalAlignment="Right"/>
+			</Grid>
+			<Grid Grid.Row="1"
+				Grid.Column="1"
+				RowDefinitions="Auto,*"
+				VerticalAlignment="Center">
+				<TextBlock
+					Text="Temperature"
+					Grid.Row="0"
+					FontSize="16"
+					VerticalAlignment="Top"
+					HorizontalAlignment="Left"/>
+				<TextBlock
+					x:Name="Temperature"
+					Text="-"
+					Grid.Row="1"
+					FontSize="16"
+					VerticalAlignment="Bottom"
+					HorizontalAlignment="Right"/>
+			</Grid>
+			<Grid Grid.Row="2"
+				Grid.Column="0"
+				RowDefinitions="Auto,*"
+				VerticalAlignment="Center">
+				<TextBlock
+					Text="Valve Drive"
+					Grid.Row="0"
+					FontSize="16"
+					VerticalAlignment="Top"
+					HorizontalAlignment="Left"/>
+				<TextBlock
+					x:Name="valveDrive"
+					Text="-"
+					Grid.Row="1"
+					FontSize="16"
+					VerticalAlignment="Bottom"
+					HorizontalAlignment="Right"/>
+			</Grid>
+			<Grid Grid.Row="2"
+				Grid.Column="1"
+				RowDefinitions="Auto,*"
+				VerticalAlignment="Center">
+				<TextBlock
+					Text="Volume"
+					Grid.Row="0"
+					FontSize="16"
+					VerticalAlignment="Top"
+					HorizontalAlignment="Left"/>
+				<TextBlock
+					x:Name="Volume"
+					Text="-"
+					Grid.Row="1"
+					FontSize="16"
+					VerticalAlignment="Bottom"
+					HorizontalAlignment="Right"/>
+			</Grid>
+		</Grid>
 	</Grid>
 </Window>

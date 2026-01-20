@@ -14,6 +14,8 @@ using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Metadata;
 using Avalonia.Rendering;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Reflection.Emit;
 
 #if WINDOWS
 using System.Management;
@@ -166,12 +168,14 @@ namespace FlowController.Views
         private readonly Dictionary<string, DateTime> _lastSeen = new(StringComparer.OrdinalIgnoreCase);
         private readonly object _seenLock = new();
 
+        private string _selected = string.Empty;
+
         private CancellationTokenSource? _continueCts;
         private Task? _continueTask;
 
         private int _scanQueued = 0;
         
-        private static bool IsLikelySerialDeviceName(string? name)
+        private static bool IsSerialDevice(string? name)
         {
             if (string.IsNullOrWhiteSpace(name)) return false;
 
@@ -244,19 +248,19 @@ namespace FlowController.Views
 
                     _devWatcher.Created += (_, e) =>
                     {
-                        if (IsLikelySerialDeviceName(e.Name))
+                        if (IsSerialDevice(e.Name))
                             QueueScanOnUI();
                     };
 
                     _devWatcher.Deleted += (_, e) =>
                     {
-                        if (IsLikelySerialDeviceName(e.Name))
+                        if (IsSerialDevice(e.Name))
                             QueueScanOnUI();
                     };
 
                     _devWatcher.Renamed += (_, e) =>
                     {
-                        if (IsLikelySerialDeviceName(e.OldName) || IsLikelySerialDeviceName(e.Name))
+                        if (IsSerialDevice(e.OldName) || IsSerialDevice(e.Name))
                             QueueScanOnUI();
                     };
 
@@ -349,8 +353,7 @@ namespace FlowController.Views
                     if (!ok || string.IsNullOrWhiteSpace(response))
                         continue;
 
-                    lock (_seenLock)
-                        _lastSeen[deviceId] = DateTime.UtcNow;
+                    lock (_seenLock) _lastSeen[deviceId] = DateTime.UtcNow;
 
                     lock (_devicesLock)
                     {
@@ -361,13 +364,17 @@ namespace FlowController.Views
                         if (idx >= 0) continue;
 
                         bool isValid = IsValidSerial(response);
-                        _devices.Add(isValid ? deviceId : $"{deviceId} - Error");
+
+                        string label = isValid ? deviceId : $"{deviceId} - Error";
+
+                        _devices.Add(label);
                     }
                 }
 
                 Dispatcher.UIThread.Post(() =>
                 {
                     var now = DateTime.UtcNow;
+                    
                     if (now - _lastScanReq < _debounce) return;
                     _lastScanReq = now;
 
@@ -409,120 +416,88 @@ namespace FlowController.Views
             _continueCts = new CancellationTokenSource();
             var token = _continueCts.Token;
 
-            TimeSpan _alive = TimeSpan.FromSeconds(25);
+            TimeSpan _alive = TimeSpan.FromSeconds(3);
             TimeSpan _tick = TimeSpan.FromMilliseconds(750);
 
-            _continueTask = Task.Run(async () =>
-            {
-                try
-                {
-                    while (!token.IsCancellationRequested)
+            _continueTask = Task.Run(async () => {
+                while (!token.IsCancellationRequested) {
+                    List<string> snapshot, comList;
+
+                    lock (_devicesLock) snapshot = _devices.ToList();
+
+                    if (snapshot.Count > 0)
                     {
-                        List<string> snapshot, comsList;
+                        comList = snapshot
+                            .Select(d => d.Split("/")[0].Trim())
+                            .Where(d => !string.IsNullOrWhiteSpace(d))
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .ToList();
 
-                        lock (_devicesLock)
-                        {
-                            snapshot = _devices.ToList();
-                        }
+                        bool _refresh = false;
 
-                        if (snapshot.Count > 0)
-                        {
-                            comsList = snapshot
-                                .Select(d => d.Split("/")[0].Trim())
-                                .Where(d => !string.IsNullOrWhiteSpace(d))
-                                .Distinct(StringComparer.OrdinalIgnoreCase)
-                                .ToList();
+                        var tasks = comList.Select(com =>
+                            Task.Run(async () => {
+                                List<string> devicesCom = snapshot
+                                    .Where(d => d.StartsWith(com + "/", StringComparison.OrdinalIgnoreCase))
+                                    .ToList();
 
-                            foreach (var com in comsList)
-                            {
-                                List<string> devicesCom;
-
-                                lock (_devicesLock)
-                                {
-                                    devicesCom = snapshot
-                                        .Where(d => d.StartsWith(com + "/", StringComparison.OrdinalIgnoreCase))
-                                        .ToList();
-                                }
-
-                                if (0 >= devicesCom.Count) continue;
+                                if (devicesCom.Count == 0) return;
 
                                 var session = GetPort(com);
 
                                 foreach (var d in devicesCom)
                                 {
                                     var id = d.Split(" - ")[0].Split("/")[1].Trim();
-                                    
                                     string deviceId = $"{com}/{id}";
-                                    bool needScan = false;
+
+                                    bool needScan;
+                                    var now = DateTime.UtcNow;
 
                                     lock (_seenLock)
                                     {
-                                        if (_lastSeen.TryGetValue(d, out var last))
-                                        {
-                                            if (DateTime.UtcNow - last > _alive)
-                                            {
-                                                needScan = true;
-                                                _lastSeen.Remove(d);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            needScan = true;
-                                        }
+                                        needScan = !_lastSeen.TryGetValue(deviceId, out var last) || (now - last) > _alive;
                                     }
 
-                                    if (needScan)
-                                    {
-                                        var (ok, response) = await session.SendCommand($"{id}SN\r", 100, token);
+                                    if (!needScan) continue;
 
-                                        System.Diagnostics.Debug.WriteLine($"COM: {com} Device: {deviceId} Resp: {response}");
+                                    var (ok, response) = await session.SendCommand($"{id}SN\r", 250, token);
+
+                                    if (!ok) continue;
+                                    
+                                    bool _valid = IsValidSerial(response);
+
+                                    lock (_devicesLock)
+                                    {
+                                        if (response == "") {
+                                            _refresh = true;
+
+                                            lock (_seenLock) _lastSeen.Remove(deviceId);
+                                            _devices.Remove(d);
+
+                                            continue;
+                                        }
+
+                                        string label = _valid ? deviceId : $"{deviceId} - Error";
+
+                                        _refresh = true;
+
+                                        int idx = _devices.FindIndex(dd =>
+                                            dd.Equals(deviceId, StringComparison.OrdinalIgnoreCase) ||
+                                            dd.StartsWith(deviceId + " -", StringComparison.OrdinalIgnoreCase));
+
+                                        lock (_seenLock) _lastSeen[deviceId] = now;
+                                        _devices[idx] = label;
                                     }
                                 }
+                            }, token)
+                        );
 
-                                //foreach (var d in devicesInCom) System.Diagnostics.Debug.WriteLine($"COM: {com} Device: {d}");
-                                //    foreach (var deviceId in devicesInCom)
-                                //    {
-                                //        bool needsScan = false;
-                                //        lock (_seenLock)
-                                //        {
-                                //            if (_lastSeen.TryGetValue(deviceId, out var last))
-                                //            {
-                                //                if (DateTime.UtcNow - last > _alive)
-                                //                {
-                                //                    needsScan = true;
-                                //                    _lastSeen.Remove(deviceId);
-                                //                }
-                                //            }
-                                //            else
-                                //            {
-                                //                needsScan = true;
-                                //            }
-                                //        }
-                                //        if (needsScan)
-                                //        {
-                                //            var session = GetPort(com);
-                                //            var (ok, response) = await session.SendCommand(
-                                //                $"{deviceId.Split("/")[1]}SN\r",
-                                //                timeout: 100,
-                                //                ct: token);
-                                //            if (ok && IsValidSerial(response))
-                                //            {
-                                //                lock (_seenLock)
-                                //                    _lastSeen[deviceId] = DateTime.UtcNow;
-                                //            }
-                                //        }
-                                //    }
-                                //}
-                            }
-                        }
+                        await Task.WhenAll(tasks);
 
-                        await Task.Delay(_tick, token);
+                        if (_refresh) Dispatcher.UIThread.Post(DisplayDevices);
                     }
-                }
-                catch (OperationCanceledException) { }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"ContiueScanning error: {ex}");
+
+                    await Task.Delay(_tick, token);
                 }
             }, token);
         }
@@ -586,15 +561,62 @@ namespace FlowController.Views
                         return m.Success ? m.Groups[1].Value.ToUpperInvariant() : "Z";
                     })
                     .ToList();
-
-                System.Diagnostics.Debug.WriteLine(snapshot);
             }
 
-            Devices.Items.Clear();
+            var snapshotSet = new HashSet<string>(snapshot);
 
-            foreach (var d in snapshot) Devices.Items.Add(d);
+            for (int i = Devices.Items.Count - 1; i >= 0; i--)
+            {
+                if (Devices.Items[i] is string existing && !snapshotSet.Contains(existing))
+                    Devices.Items.RemoveAt(i);
+            }
+
+            var currentSet = new HashSet<string>(Devices.Items.Cast<object>()
+                                                           .OfType<string>());
+
+            foreach (var d in snapshot)
+            {
+                if (!currentSet.Contains(d))
+                    Devices.Items.Add(d);
+            }
+
+            for (int targetIndex = 0; targetIndex < snapshot.Count; targetIndex++)
+            {
+                var desired = snapshot[targetIndex];
+
+                int currentIndex = -1;
+                for (int i = 0; i < Devices.Items.Count; i++)
+                {
+                    if (Devices.Items[i] is string s && s == desired)
+                    {
+                        currentIndex = i;
+                        break;
+                    }
+                }
+
+                if (currentIndex == -1) continue;
+
+                if (currentIndex != targetIndex)
+                {
+                    Devices.Items.RemoveAt(currentIndex);
+                    Devices.Items.Insert(targetIndex, desired);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(_selected) && snapshotSet.Contains(_selected))
+            {
+                Devices.SelectedItem = _selected;
+            }
+            else if (snapshot.Count > 0)
+            {
+                Devices.SelectedItem = snapshot[0];
+            }
+            else
+            {
+                Devices.SelectedItem = null;
+            }
         }
-        
+
         private void RemoveDevicesFromCOM(string com)
         {
             lock (_devicesLock)
