@@ -1,160 +1,258 @@
 <Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:FlowController.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="FlowController.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="FlowController"
-		Width="572"
-		Height="272">
-	<Grid ColumnDefinitions="160,*"
-		ColumnSpacing="16"
-		Margin="20">
-		<Grid Grid.Column="0"
-			RowSpacing="4">
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto"/>
-				<RowDefinition Height="*"/>
-			</Grid.RowDefinitions>
-			<TextBlock Text="Devices"
-				Grid.Row="0"
-				FontSize="18"
-				Margin="8,0"/>
-			<ListBox x:Name="Devices"
-				 Grid.Row="1"
-				 Background="Transparent"
-				 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-				<ListBox.ItemTemplate>
-					<DataTemplate>
-						<TextBlock Text="{Binding}"/>
-					</DataTemplate>
-				</ListBox.ItemTemplate>
-
-			</ListBox>
-		</Grid>
-		<Grid Grid.Column="1"
-			RowDefinitions="50, 50, 50, Auto"
-			RowSpacing="16"
-			ColumnDefinitions="150, 150, Auto"
-			ColumnSpacing="48">
-			<Grid Grid.Row="0"
-				Grid.Column="0"
-				VerticalAlignment="Center">
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:FlowController.ViewModels"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+	x:Class="FlowController.Views.MainWindow"
+	x:DataType="vm:MainWindowViewModel"
+	Icon="/Assets/avalonia-logo.ico"
+	Title="FlowController"
+	WindowState="Maximized">
+	<Window.Styles>
+		<Style Selector="TextBlock:focus">
+			<Setter Property="FocusAdorner" Value="{x:Null}"/>
+		</Style>
+		<Style Selector="Button:focus">
+			<Setter Property="FocusAdorner" Value="{x:Null}"/>
+		</Style>
+		<Style Selector="ListBox:focus">
+			<Setter Property="FocusAdorner" Value="{x:Null}"/>
+		</Style>
+		<Style Selector="ListBoxItem:focus">
+			<Setter Property="FocusAdorner" Value="{x:Null}"/>
+		</Style>
+	</Window.Styles>
+	<Grid>
+		<Grid ColumnDefinitions="160,*"
+			ColumnSpacing="16"
+			Margin="20">
+			<Grid Grid.Column="0"
+				RowSpacing="4">
 				<Grid.RowDefinitions>
-					<RowDefinition Height="*"/>
+					<RowDefinition Height="Auto"/>
 					<RowDefinition Height="*"/>
 				</Grid.RowDefinitions>
-				<TextBlock
-					Text="Flow"
+				<TextBlock x:Name="DevicesLabel"
+					Text="Devices"
 					Grid.Row="0"
 					FontSize="18"
-					VerticalAlignment="Top"
-					HorizontalAlignment="Left"/>
-				<TextBlock
-					x:Name="Flow"
-					Text="-"
+					Margin="8,0"/>
+				<ListBox x:Name="Devices"
 					Grid.Row="1"
-					FontSize="24"
-					VerticalAlignment="Bottom"
-					HorizontalAlignment="Right"/>
+					Background="White"
+					TabIndex="0"
+					Focusable="True"
+					IsTabStop="True"
+					KeyboardNavigation.TabNavigation="Once"
+					AutoScrollToSelectedItem="True"
+					ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+					<ListBox.ItemTemplate>
+						<DataTemplate>
+							<TextBlock Text="{Binding}"/>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
 			</Grid>
-			<Grid Grid.Row="0"
-				Grid.Column="1"
-				VerticalAlignment="Center">
-				<Grid.RowDefinitions>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="*"/>
-				</Grid.RowDefinitions>
-				<TextBlock
-					x:Name="Units"
-					Text="-"
-					Grid.Row="0"
-					FontSize="16"
-					Margin="0,4,0,0"
-					VerticalAlignment="Top"
-					HorizontalAlignment="Right"/>
-				<TextBlock
-					x:Name="Range"
-					Text="-"
-					Grid.Row="1"
-					FontSize="20"
-					VerticalAlignment="Bottom"
-					HorizontalAlignment="Right"/>
-			</Grid>
-			<Grid Grid.Row="1"
-				Grid.Column="0"
+			<Grid Grid.Column="1"
 				RowDefinitions="Auto,*"
-				VerticalAlignment="Center">
-				<TextBlock
-					Text="Setpoint"
-					Grid.Row="0"
-					FontSize="16"
-					VerticalAlignment="Top"
-					HorizontalAlignment="Left"/>
-				<TextBlock
-					x:Name="Setpoint"
-					Text="-"
-					Grid.Row="1"
-					FontSize="16"
-					VerticalAlignment="Bottom"
+				RowSpacing="8">
+				<Button x:Name="Setup"
+					Content="Setup"
+					TabIndex="2"
+					Background="LightGray"
 					HorizontalAlignment="Right"/>
-			</Grid>
-			<Grid Grid.Row="1"
-				Grid.Column="1"
-				RowDefinitions="Auto,*"
-				VerticalAlignment="Center">
-				<TextBlock
-					Text="Temperature"
-					Grid.Row="0"
-					FontSize="16"
-					VerticalAlignment="Top"
-					HorizontalAlignment="Left"/>
-				<TextBlock
-					x:Name="Temperature"
-					Text="-"
+				<Grid x:Name="Main"
 					Grid.Row="1"
-					FontSize="16"
-					VerticalAlignment="Bottom"
-					HorizontalAlignment="Right"/>
-			</Grid>
-			<Grid Grid.Row="2"
-				Grid.Column="0"
-				RowDefinitions="Auto,*"
-				VerticalAlignment="Center">
-				<TextBlock
-					Text="Valve Drive"
-					Grid.Row="0"
-					FontSize="16"
-					VerticalAlignment="Top"
-					HorizontalAlignment="Left"/>
-				<TextBlock
-					x:Name="valveDrive"
-					Text="-"
+					RowDefinitions="50, 50, 50, 25, Auto"
+					RowSpacing="16"
+					ColumnDefinitions="150, 150, Auto"
+					ColumnSpacing="48">
+					<Grid Grid.Row="0"
+						Grid.Column="0"
+						VerticalAlignment="Center">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="*"/>
+							<RowDefinition Height="*"/>
+						</Grid.RowDefinitions>
+						<TextBlock Text="Flow"
+							Grid.Row="0"
+							FontSize="18"
+							VerticalAlignment="Top"
+							HorizontalAlignment="Left"/>
+						<TextBlock x:Name="Flow"
+							Text="-"
+							Grid.Row="1"
+							FontSize="24"
+							Padding="0,0,8,0"
+							VerticalAlignment="Bottom"
+							HorizontalAlignment="Right"/>
+					</Grid>
+					<Grid Grid.Row="0"
+						Grid.Column="1"
+						VerticalAlignment="Center">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="*"/>
+							<RowDefinition Height="*"/>
+						</Grid.RowDefinitions>
+						<TextBlock x:Name="Units"
+							Text="-"
+							Grid.Row="0"
+							FontSize="16"
+							Margin="0,4,0,0"
+							VerticalAlignment="Top"
+							HorizontalAlignment="Right"/>
+						<TextBlock x:Name="Range"
+							Text="-"
+							Grid.Row="1"
+							FontSize="20"
+							VerticalAlignment="Bottom"
+							HorizontalAlignment="Right"/>
+					</Grid>
+					<Grid Grid.Row="1"
+						Grid.Column="0"
+						RowDefinitions="Auto,*"
+						VerticalAlignment="Center">
+						<TextBlock x:Name="SetpointLabel"
+							Text="Setpoint"
+							Grid.Row="0"
+							FontSize="16"
+							VerticalAlignment="Top"
+							HorizontalAlignment="Left"/>
+						<TextBlock x:Name="Setpoint"
+							Text="-"
+							Grid.Row="1"
+							FontSize="16"
+							Padding="0,0,8,0"
+							TabIndex="1"
+							Focusable="True"
+							IsTabStop="True"
+							TextAlignment="Right"
+							FocusAdorner="{x:Null}"
+							Background="White"
+							HorizontalAlignment="Stretch"/>
+					</Grid>
+					<Grid Grid.Row="1"
+						Grid.Column="1"
+						RowDefinitions="Auto,*"
+						VerticalAlignment="Center">
+						<TextBlock Text="Temperature"
+							Grid.Row="0"
+							FontSize="16"
+							VerticalAlignment="Top"
+							HorizontalAlignment="Left"/>
+						<TextBlock x:Name="Temperature"
+							Text="-"
+							Grid.Row="1"
+							FontSize="16"
+							VerticalAlignment="Bottom"
+							HorizontalAlignment="Right"/>
+					</Grid>
+					<Grid Grid.Row="2"
+						Grid.Column="0"
+						RowDefinitions="Auto,*"
+						VerticalAlignment="Center">
+						<TextBlock Text="Valve Drive"
+							Grid.Row="0"
+							FontSize="16"
+							VerticalAlignment="Top"
+							HorizontalAlignment="Left"/>
+						<TextBlock x:Name="Drive"
+							Text="-"
+							Grid.Row="1"
+							FontSize="16"
+							VerticalAlignment="Bottom"
+							HorizontalAlignment="Right"/>
+					</Grid>
+					<Grid Grid.Row="2"
+						Grid.Column="1"
+						RowDefinitions="Auto,*"
+						VerticalAlignment="Center">
+						<TextBlock Text="Volume"
+							Grid.Row="0"
+							FontSize="16"
+							VerticalAlignment="Top"
+							HorizontalAlignment="Left"/>
+						<TextBlock x:Name="Volume"
+							Text="-"
+							Grid.Row="1"
+							FontSize="16"
+							Padding="0,0,8,0"
+							VerticalAlignment="Bottom"
+							HorizontalAlignment="Right"/>
+					</Grid>
+					<StackPanel Grid.Row="3"
+						Grid.Column="0"
+						Grid.ColumnSpan="2"
+						Orientation="Horizontal"
+						HorizontalAlignment="Right"
+						VerticalAlignment="Center"
+						Spacing="10">
+						<TextBlock x:Name="Multiple"
+							Text="2+"
+							Opacity="0"
+							Foreground="Red"/>
+						<TextBlock x:Name="TOV"
+							Text="TOV"
+							Opacity="0"
+							Foreground="Red"/>
+						<TextBlock x:Name="MOV"
+							Text="MOV"
+							Opacity="0"
+							Foreground="Red"/>
+						<TextBlock x:Name="OVR"
+							Text="OVR"
+							Opacity="0"
+							Foreground="Red"/>
+						<TextBlock x:Name="HLD"
+							Text="HLD"
+							Opacity="0"
+							Foreground="Red"/>
+						<TextBlock x:Name="VTM"
+							Text="VTM"
+							Opacity="0"
+							Foreground="Red"/>
+					</StackPanel>
+				</Grid>
+				<Grid x:Name="SetupMenu"
 					Grid.Row="1"
-					FontSize="16"
-					VerticalAlignment="Bottom"
-					HorizontalAlignment="Right"/>
-			</Grid>
-			<Grid Grid.Row="2"
-				Grid.Column="1"
-				RowDefinitions="Auto,*"
-				VerticalAlignment="Center">
-				<TextBlock
-					Text="Volume"
-					Grid.Row="0"
-					FontSize="16"
-					VerticalAlignment="Top"
-					HorizontalAlignment="Left"/>
-				<TextBlock
-					x:Name="Volume"
-					Text="-"
-					Grid.Row="1"
-					FontSize="16"
-					VerticalAlignment="Bottom"
-					HorizontalAlignment="Right"/>
+					RowDefinitions="*,64,2*"
+					ColumnDefinitions="2*,18,84,84,3*"
+					IsVisible="false">
+					<StackPanel Grid.Row="1"
+						Grid.Column="1"
+						Orientation="Vertical"
+						Spacing="10">
+						<TextBlock Text="▲"
+							FontSize="8"
+							TextAlignment="Center"
+							HorizontalAlignment="Center"
+							VerticalAlignment="Center"/>
+						<TextBlock x:Name="ID"
+							Text="-"
+							FontSize="18"
+							TabIndex="-1"
+							Focusable="True"
+							IsTabStop="True"
+							TextAlignment="Center"
+							FocusAdorner="{x:Null}"
+							HorizontalAlignment="Center"/>
+						<TextBlock Text="▼"
+							FontSize="8"
+							TextAlignment="Center"
+							HorizontalAlignment="Center"
+							VerticalAlignment="Center"/>
+					</StackPanel>
+					<Button x:Name="ChangeButton"
+						Grid.Row="1"
+						Grid.Column="3"
+						Content="Change"
+						TabIndex="-1"
+						Background="LightGray"
+						HorizontalAlignment="Stretch"
+						VerticalContentAlignment="Center"
+						HorizontalContentAlignment="Center"/>
+				</Grid>
 			</Grid>
 		</Grid>
 	</Grid>
