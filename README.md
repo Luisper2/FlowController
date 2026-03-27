@@ -4,6 +4,12 @@ Desktop GUI application for real-time monitoring and control of mass flow contro
 
 *Property of GP Ionics*
 
+![License: Proprietary](https://img.shields.io/badge/license-Proprietary-red.svg)
+
+> **All Rights Reserved.** This software is the exclusive property of GP Ionics.
+> Unauthorized use, copying, or distribution is strictly prohibited.
+> See [LICENSE](LICENSE) for details.
+
 ---
 
 ## Overview
